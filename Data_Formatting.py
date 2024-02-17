@@ -16,9 +16,8 @@ import os
 from tqdm import tqdm
 import json
 
-
-
 from skimage import morphology, segmentation
+
 
 def label_clusters(mat):
     """Sequentially labels distinct clusters in segmentation
@@ -124,7 +123,7 @@ np.unique(seg)
 def format_data(max_hist=datetime(2021, 9, 30), min_date=datetime(1981, 10, 1)):
     raster_path = "/home/ScoutJarman/Code/ILWA/data/rasters/PRISM/ppt_81-23/ppt19810101.tif"
     with rasterio.open(raster_path) as ref_handle:
-        for r in ["r1", "r2", "r3"]:
+        for r in ["ssp585"]:
             folders_in = [f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/ppt_{r}",
                         f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/tmin_{r}",
                         f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/tmax_{r}"]
@@ -134,6 +133,7 @@ def format_data(max_hist=datetime(2021, 9, 30), min_date=datetime(1981, 10, 1)):
             dates = []
             pbar =  tqdm(os.listdir(folders_in[0]))
             for file in pbar:
+                # Note the following indicies are just for ppt, will need to add 1 if folders_in doesn't start with ppt
                 year = int(file[3:7])
                 month = int(file[7:9])
                 day = int(file[9:11])
@@ -194,4 +194,4 @@ def format_data(max_hist=datetime(2021, 9, 30), min_date=datetime(1981, 10, 1)):
 
 
 
-data, dates = format_data()
+format_data()
