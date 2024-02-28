@@ -114,8 +114,8 @@ for idx, geometry in enumerate(watersheds['geometry']):
 seg = seg.astype(int)
 seg = _remove_singletons(seg, 3, False)
 
-plt.imshow(seg, cmap='inferno')
-np.unique(seg)
+# plt.imshow(seg, cmap='inferno')
+# np.unique(seg)
 
 
 
@@ -123,7 +123,8 @@ np.unique(seg)
 def format_data(max_hist=datetime(2021, 9, 30), min_date=datetime(1981, 10, 1)):
     raster_path = "/home/ScoutJarman/Code/ILWA/data/rasters/PRISM/ppt_81-23/ppt19810101.tif"
     with rasterio.open(raster_path) as ref_handle:
-        for r in ["ssp585"]:
+        for r in ["ssp245_r3", "ssp370_r3", "ssp585_r3"]:
+            print(f"Processing {r}...")
             folders_in = [f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/ppt_{r}",
                         f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/tmin_{r}",
                         f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/tmax_{r}"]

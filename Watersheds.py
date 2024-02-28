@@ -7,10 +7,10 @@ from scipy.interpolate import griddata
 
 
 
-rep = "r1"
+rep = "r3"
 # Read layer names from the JSON file
 for in_var, out_var, vd in zip(["pr", "tasmax", "tasmin"], ['ppt', 'tmax', 'tmin'], ['20220519', '20220413', '20220413']):
-    output_directories = [f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/{out_var}_{i}/" for i in ["ssp245", "ssp370", "ssp585"]]
+    output_directories = [f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/{out_var}_{i}_{rep}/" for i in ["ssp245", "ssp370", "ssp585"]]
     
     r1_tiffs = [
         f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/historical/day/bearlake_{in_var}.ACCESS-CM2.historical.{rep}i1p1f1.1950-2014.LOCA_16thdeg_v{vd}.tif",
