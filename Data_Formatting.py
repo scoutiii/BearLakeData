@@ -114,8 +114,9 @@ def format_data(max_hist=datetime(2021, 9, 30), min_date=datetime(1981, 10, 1)):
             print(f"Processing {r}...")
             folders_in = [f"/data/ScoutJarman/LOCA/LOCA/ppt_{r}",
                           f"/data/ScoutJarman/LOCA/LOCA/tmin_{r}",
-                          f"/data/ScoutJarman/LOCA/LOCA/tmax_{r}"]
-            var_names = ['ppt', 'tmin', 'tmax']
+                          f"/data/ScoutJarman/LOCA/LOCA/tmax_{r}",
+                          f"/data/ScoutJarman/LOCA/LOCA/swe_{r}"]
+            var_names = ['ppt', 'tmin', 'tmax', 'swe']
             # Load in variables
             data = []
             dates = []
@@ -129,30 +130,30 @@ def format_data(max_hist=datetime(2021, 9, 30), min_date=datetime(1981, 10, 1)):
                 dtime = datetime(year, month, day)
 
                 raster_arr = np.zeros_like(ref_handle.read(1))
-                try:
-                    tmp_data = []
-                    for i, f_in in enumerate(folders_in):
-                        with rasterio.open(os.path.join(f_in, f"{var_names[i]}{nums}.tif")) as handle:
-                            transform_larger, _, __ = calculate_default_transform(
-                                    handle.crs, ref_handle.crs, handle.width, handle.height,
-                                    *handle.bounds, resolution=ref_handle.res)
-                            # Perform resampling
-                            reproject(
-                                source=handle.read(1),
-                                destination=raster_arr,
-                                src_transform=handle.transform,
-                                src_crs=handle.crs,
-                                dst_transform=transform_larger,
-                                dst_crs=ref_handle.crs,
-                                resampling=Resampling.bilinear)
+                # try:
+                tmp_data = []
+                for i, f_in in enumerate(folders_in):
+                    with rasterio.open(os.path.join(f_in, f"{var_names[i]}{nums}.tif")) as handle:
+                        transform_larger, _, __ = calculate_default_transform(
+                                handle.crs, ref_handle.crs, handle.width, handle.height,
+                                *handle.bounds, resolution=ref_handle.res)
+                        # Perform resampling
+                        reproject(
+                            source=handle.read(1),
+                            destination=raster_arr,
+                            src_transform=handle.transform,
+                            src_crs=handle.crs,
+                            dst_transform=transform_larger,
+                            dst_crs=ref_handle.crs,
+                            resampling=Resampling.bilinear)
 
-                        for l in np.unique(seg):
-                            m = np.mean(raster_arr[seg == l])
-                            tmp_data.append(m)
-                    data.append(tmp_data)
-                    dates.append(dtime)
-                except:
-                    pbar.set_description(f"Don't have all variables for {dtime}")
+                    for l in np.unique(seg):
+                        m = np.mean(raster_arr[seg == l])
+                        tmp_data.append(m)
+                data.append(tmp_data)
+                dates.append(dtime)
+                # except:
+                #     pbar.set_description(f"Don't have all variables for {dtime}")
 
             # Sorts the data by date
             data = np.asarray(data)
