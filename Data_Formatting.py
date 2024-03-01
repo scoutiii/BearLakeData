@@ -3,18 +3,12 @@ import rasterio
 from rasterio.features import geometry_mask
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 
-from skimage.morphology import label
-from dateutil.relativedelta import relativedelta
-
-import matplotlib.pyplot as plt
-import matplotlib
 import numpy as np
 from datetime import datetime
 import pandas as pd
 
 import os
 from tqdm import tqdm
-import json
 
 from skimage import morphology, segmentation
 
@@ -40,7 +34,6 @@ def label_clusters(mat):
         return results
     else:
         return morphology.label(mat, connectivity=1, background=-1)
-
 
 def _label_graph(mat):
     """Labels segments, similar to label_clusters.
@@ -98,36 +91,30 @@ def _remove_singletons(seg, min_size, relabel=True):
 # read in watersheds
 shapefile_path = "/home/ScoutJarman/Code/ILWA/data/shapefiles/id_ut8_1601_exp/id_ut8_1601_exp.shp"
 watersheds = gpd.read_file(shapefile_path)
-
 # get raster meta data information
-raster_path = "/home/ScoutJarman/Code/ILWA/data/rasters/PRISM/ppt_81-23/ppt19810101.tif"
+raster_path = "/data/ScoutJarman/PRISM/PRISM/ppt_81-23/ppt19810101.tif"
 with rasterio.open(raster_path) as handle:
     raster_arr = handle.read(1)
     meta = handle.meta
-
 # Make segmentations
 seg = np.zeros_like(raster_arr)
 for idx, geometry in enumerate(watersheds['geometry']):
     mask = geometry_mask([geometry], out_shape=raster_arr.shape, transform=meta['transform'], invert=True)
     seg[mask] = idx + 1
-
 seg = seg.astype(int)
 seg = _remove_singletons(seg, 3, False)
-
-# plt.imshow(seg, cmap='inferno')
-# np.unique(seg)
 
 
 
 # get raster meta data information
 def format_data(max_hist=datetime(2021, 9, 30), min_date=datetime(1981, 10, 1)):
-    raster_path = "/home/ScoutJarman/Code/ILWA/data/rasters/PRISM/ppt_81-23/ppt19810101.tif"
+    raster_path = "/data/ScoutJarman/PRISM/PRISM/ppt_81-23/ppt19810101.tif"
     with rasterio.open(raster_path) as ref_handle:
-        for r in ["ssp245_r3", "ssp370_r3", "ssp585_r3"]:
+        for r in ["rcp45", "rcp85"]:
             print(f"Processing {r}...")
-            folders_in = [f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/ppt_{r}",
-                        f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/tmin_{r}",
-                        f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/tmax_{r}"]
+            folders_in = [f"/data/ScoutJarman/LOCA/LOCA/ppt_{r}",
+                          f"/data/ScoutJarman/LOCA/LOCA/tmin_{r}",
+                          f"/data/ScoutJarman/LOCA/LOCA/tmax_{r}"]
             var_names = ['ppt', 'tmin', 'tmax']
             # Load in variables
             data = []
@@ -183,16 +170,5 @@ def format_data(max_hist=datetime(2021, 9, 30), min_date=datetime(1981, 10, 1)):
             hist_dates = pd.DataFrame({'date': dates})
             hist_df = pd.concat([hist_dates, hist_df], axis=1)
             hist_df.to_csv(f"/home/ScoutJarman/Code/ILWA/data/other/Daily_{r}.csv", index=False)
-            
-            # # Make the future dataframe
-            # column_names = []
-            # for v_nam in var_names:
-            #     column_names += [f"{v_nam}_{i}" for i in np.unique(seg)]
-            # futu_df = pd.DataFrame(data_s[np.invert(inds)], columns=column_names)
-            # futu_dates = pd.DataFrame({'date': dates[np.invert(inds)]})
-            # futu_df = pd.concat([futu_dates, futu_df], axis=1)
-            # futu_df.to_csv(f"/home/ScoutJarman/Code/ILWA/data/other/Daily_futu{r}.csv", index=False)
-
-
 
 format_data()

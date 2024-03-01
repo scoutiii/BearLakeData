@@ -4,48 +4,64 @@ import json
 from tqdm import tqdm
 import os
 from scipy.interpolate import griddata
+import datetime
+
+def get_tif_files(directory, var_n):
+    pt_tif_files = []
+    for filename in os.listdir(directory):
+        if var_n in filename and filename.endswith(".tif"):
+            pt_tif_files.append(os.path.join(directory, filename))
+    return pt_tif_files
+
+def generate_days(year):
+    start_date = datetime.date(year, 1, 1)
+    end_date = datetime.date(year, 12, 31)
+    delta = datetime.timedelta(days=1)
+
+    days_in_year = []
+    current_date = start_date
+    while current_date <= end_date:
+        days_in_year.append(current_date.strftime("%Y-%m-%d"))
+        current_date += delta
+
+    return days_in_year
 
 
-
-rep = "r3"
 # Read layer names from the JSON file
-for in_var, out_var, vd in zip(["pr", "tasmax", "tasmin"], ['ppt', 'tmax', 'tmin'], ['20220519', '20220413', '20220413']):
-    output_directories = [f"/home/ScoutJarman/Code/ILWA/data/rasters/LOCA/{out_var}_{i}_{rep}/" for i in ["ssp245", "ssp370", "ssp585"]]
+# for in_var, out_var in zip(["pr", "tasmax", "tasmin", "SWE"], ['ppt', 'tmax', 'tmin', 'swe']):
+for in_var, out_var in zip(["SWE"], ['swe']):
+    output_directories = [f"/data/ScoutJarman/LOCA/LOCA/{out_var}_{i}/" for i in ["rcp45", "rcp85"]]
+    for directory in output_directories:
+        if not os.path.exists(directory):
+            print(f"Making {directory}")
+            os.makedirs(directory)
     
-    r1_tiffs = [
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/historical/day/bearlake_{in_var}.ACCESS-CM2.historical.{rep}i1p1f1.1950-2014.LOCA_16thdeg_v{vd}.tif",
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/future/day/bearlake_{in_var}.ACCESS-CM2.ssp245.{rep}i1p1f1.2015-2044.LOCA_16thdeg_v{vd}.tif",
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/future/day/bearlake_{in_var}.ACCESS-CM2.ssp245.{rep}i1p1f1.2045-2074.LOCA_16thdeg_v{vd}.tif",
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/future/day/bearlake_{in_var}.ACCESS-CM2.ssp245.{rep}i1p1f1.2075-2100.LOCA_16thdeg_v{vd}.tif"
-    ]
-    r2_tiffs = [
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/historical/day/bearlake_{in_var}.ACCESS-CM2.historical.{rep}i1p1f1.1950-2014.LOCA_16thdeg_v{vd}.tif",
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/future/day/bearlake_{in_var}.ACCESS-CM2.ssp370.{rep}i1p1f1.2015-2044.LOCA_16thdeg_v{vd}.tif",
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/future/day/bearlake_{in_var}.ACCESS-CM2.ssp370.{rep}i1p1f1.2045-2074.LOCA_16thdeg_v{vd}.tif",
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/future/day/bearlake_{in_var}.ACCESS-CM2.ssp370.{rep}i1p1f1.2075-2100.LOCA_16thdeg_v{vd}.tif"
-    ]
-    r3_tiffs = [
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/historical/day/bearlake_{in_var}.ACCESS-CM2.historical.{rep}i1p1f1.1950-2014.LOCA_16thdeg_v{vd}.tif",
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/future/day/bearlake_{in_var}.ACCESS-CM2.ssp585.{rep}i1p1f1.2015-2044.LOCA_16thdeg_v{vd}.tif",
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/future/day/bearlake_{in_var}.ACCESS-CM2.ssp585.{rep}i1p1f1.2045-2074.LOCA_16thdeg_v{vd}.tif",
-        f"/home/ScoutJarman/Code/ILWA/data/rasters/bear_lake/{in_var}/future/day/bearlake_{in_var}.ACCESS-CM2.ssp585.{rep}i1p1f1.2075-2100.LOCA_16thdeg_v{vd}.tif"
-    ]
+    if in_var != "SWE":
+        tiffs_45 = get_tif_files("/data/ScoutJarman/LOCA/NCAR/met/ACCESS1-0/historical/", in_var)
+        tiffs_45 += get_tif_files(f"/data/ScoutJarman/LOCA/NCAR/met/ACCESS1-0/rcp45/", in_var)
+        tiffs_85 = get_tif_files("/data/ScoutJarman/LOCA/NCAR/met/ACCESS1-0/historical/", in_var)
+        tiffs_85 += get_tif_files(f"/data/ScoutJarman/LOCA/NCAR/met/ACCESS1-0/rcp85/", in_var)
+    else:
+        tiffs_45 = get_tif_files("/data/ScoutJarman/LOCA/NCAR/vic/ACCESS1-0/historical/", in_var)
+        tiffs_45 += get_tif_files(f"/data/ScoutJarman/LOCA/NCAR/vic/ACCESS1-0/rcp45/", in_var)
+        tiffs_85 = get_tif_files("/data/ScoutJarman/LOCA/NCAR/vic/ACCESS1-0/historical/", in_var)
+        tiffs_85 += get_tif_files(f"/data/ScoutJarman/LOCA/NCAR/vic/ACCESS1-0/rcp85/", in_var)
 
-    for i, tiffs in enumerate([r1_tiffs, r2_tiffs, r3_tiffs]):
-        # Check and make outputdirectory for r level
+    for i, tiffs in enumerate([tiffs_45, tiffs_85]):
         output_directory = output_directories[i]
-        if not os.path.exists(output_directory):
-            print(f"Making {output_directory}")
-            os.makedirs(output_directory)
         # Loop through each of the different tiff files
         for input_path in tiffs:
-            with open(input_path + ".aux.json", 'r') as json_handle:
-                layer_names = json.load(json_handle)['time']
-            
+            if in_var != "SWE":
+                with open(input_path + ".aux.json", 'r') as json_handle:
+                    layer_names = json.load(json_handle)['time']
+            else:
+                year = int(input_path.split(".")[1])
+                layer_names = generate_days(year)
+
             # Open tiff and write each layer to new file
             with rasterio.open(input_path) as src:
                 # Loop through bands and layer names
-                for band_idx, layer_name in tqdm(zip(range(1, src.count + 1), layer_names), total=src.count):
+                for band_idx, layer_name in tqdm(zip(range(1, src.count + 1), layer_names), total=src.count, desc=f"{input_path}"):
                     # Read the band data
                     band_data = src.read(band_idx)
 
